@@ -24,7 +24,7 @@ if [ $(id -u) -ne 0 ]; then
     exit 1
 fi
 
-if [ "${FLAVOUR}" == "ubuntu-minimal" ] || [ "${FLAVOUR}" == "ubuntu-standard" ]; then
+if [ "${FLAVOUR}" == "ubuntu-minimal" ] || [ "${FLAVOUR}" == "ubuntu-standard" ] || [ "${FLAVOUR}" == "ubuntu-u-boot" ]; then
     USERNAME="ubuntu"
     OEM_CONFIG=0
 else
@@ -136,7 +136,7 @@ function ubuntu_minimal() {
 
 # Install Ubuntu standard
 function ubuntu_standard() {
-    if [ "${FLAVOUR}" != "ubuntu-minimal" ] && [ ! -f "${R}/tmp/.standard" ]; then
+    if [ "${FLAVOUR}" != "ubuntu-minimal" ] && [ "${FLAVOUR}" != "ubuntu-u-boot" ] && [ ! -f "${R}/tmp/.standard" ]; then
         chroot $R apt-get -y install ubuntu-standard
         touch "${R}/tmp/.standard"
     fi
@@ -242,7 +242,7 @@ ff02::2         ip6-allrouters
 EOM
 
     # Set up interfaces
-    if [ "${FLAVOUR}" != "ubuntu-minimal" ] && [ "${FLAVOUR}" != "ubuntu-standard" ]; then
+    if [ "${FLAVOUR}" != "ubuntu-minimal" ] && [ "${FLAVOUR}" != "ubuntu-standard" ] && [ "${FLAVOUR}" != "ubuntu-u-boot" ]; then
         cat <<EOM >$R/etc/network/interfaces
 # interfaces(5) file used by ifup(8) and ifdown(8)
 # Include files from /etc/network/interfaces.d:
@@ -337,7 +337,7 @@ function configure_hardware() {
     chown root:root $R/usr/bin/pi-top-*
     chmod +x $R/usr/bin/pi-top-*
 
-    if [ "${FLAVOUR}" != "ubuntu-minimal" ] && [ "${FLAVOUR}" != "ubuntu-standard" ]; then
+    if [ "${FLAVOUR}" != "ubuntu-minimal" ] && [ "${FLAVOUR}" != "ubuntu-standard" ] && [ "${FLAVOUR}" != "ubuntu-u-boot" ]; then
         # Install fbturbo drivers on non composited desktop OS
         # fbturbo causes VC4 to fail
         if [ "${FLAVOUR}" == "lubuntu" ] || [ "${FLAVOUR}" == "ubuntu-mate" ] || [ "${FLAVOUR}" == "xubuntu" ]; then
@@ -383,7 +383,7 @@ function configure_hardware() {
     cp files/config.txt $R/boot/
 
     # Add /boot/cmdline.txt
-    if [ "${FLAVOUR}" == "ubuntu-minimal" ] || [ "${FLAVOUR}" == "ubuntu-standard" ]; then
+    if [ "${FLAVOUR}" == "ubuntu-minimal" ] || [ "${FLAVOUR}" == "ubuntu-standard" ] || [ "${FLAVOUR}" == "ubuntu-u-boot" ]; then
       NETNAME_OVERRIDE="net.ifnames=0 biosdevname=0"
     else
       NETNAME_OVERRIDE=""
@@ -404,7 +404,7 @@ EOM
 
 function install_software() {
 
-    if [ "${FLAVOUR}" != "ubuntu-minimal" ]; then
+    if [ "${FLAVOUR}" != "ubuntu-minimal" ] && [ "${FLAVOUR}" != "ubuntu-u-boot" ]; then
         # FIXME - Replace with meta packages(s)
 
         # Python
@@ -648,7 +648,7 @@ function stage_02_desktop() {
     R="${DESKTOP_R}"
     mount_system
 
-    if [ "${FLAVOUR}" == "ubuntu-minimal" ] || [ "${FLAVOUR}" == "ubuntu-standard" ]; then
+    if [ "${FLAVOUR}" == "ubuntu-minimal" ] || [ "${FLAVOUR}" == "ubuntu-standard" ] || [ "${FLAVOUR}" == "ubuntu-u-boot" ]; then
         echo "Skipping desktop install for ${FLAVOUR}"
     elif [ "${FLAVOUR}" == "lubuntu" ]; then
         install_meta ${FLAVOUR}-core --no-install-recommends
@@ -707,7 +707,7 @@ function stage_04_corrections() {
         chroot $R apt-get -y dist-upgrade
       fi
 
-      if [ "${FLAVOUR}" != "ubuntu-minimal" ] && [ "${FLAVOUR}" != "ubuntu-standard" ]; then
+      if [ "${FLAVOUR}" != "ubuntu-minimal" ] && [ "${FLAVOUR}" != "ubuntu-standard" ] && [ "${FLAVOUR}" != "ubuntu-u-boot" ]; then
         # Upgrade Xorg using HWE.
         chroot $R apt-get install -y --install-recommends \
         xserver-xorg-core-hwe-16.04 \
@@ -719,6 +719,15 @@ function stage_04_corrections() {
         xserver-xorg-video-fbdev-hwe-16.04 \
         xserver-xorg-video-vesa-hwe-16.04
       fi
+
+      if [ "${FLAVOUR}" == "ubuntu-u-boot" ]; then
+        echo "Configure for u-boot."
+        cp -v u-boot/u-boot.bin $R/boot/
+        cp -v u-boot/boot.scr $R/boot/
+        cp -v u-boot/config.txt $R/boot/
+        cp -v u-boot/cmdline.txt $R/boot/
+      fi
+
     fi
 
     # Insert other corrections here.
