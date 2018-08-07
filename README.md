@@ -5,6 +5,10 @@ This is a pure clone of the Raspberry Pi Flavour Maker available from launchpad 
  * <https://git.launchpad.net/ubuntu-pi-flavour-maker>
  * git clone https://git.launchpad.net/ubuntu-pi-flavour-maker
 
+My intent here is to fix some things that are currently broken for ubuntu-standard and ubuntu-minimal in the above listed repository.
+
+All commentary below this line is from the original Repo.
+
 Martin Wimpress and Rohith Madhavan have made an Ubuntu MATE image
 for the Raspberry Pi 2 and Raspberry PI 3 which you can download or
 build yourself.
