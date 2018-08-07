@@ -7,6 +7,10 @@ This is a pure clone of the Raspberry Pi Flavour Maker available from launchpad 
 
 My intent here is to fix some things that are currently broken for ubuntu-standard and ubuntu-minimal in the above listed repository.
 
+In addition, we haved a new target, ubuntu-u-boot which is a ubuntu match for the ubuntu-minimal server build, with the difference being that it boots through u-boot.
+
+The repository contains a precompiled u-boot.bin, and the related boot.scr, config.txt, and cmdline.txt files to support it. It could be more elegant, but the framework for that is in place as a working example.
+
 #### All that follows is from the original README
 
 Martin Wimpress and Rohith Madhavan have made an Ubuntu MATE image
