@@ -383,7 +383,7 @@ function configure_hardware() {
     cp files/config.txt $R/boot/
 
     # Add /boot/cmdline.txt
-    if [ "${FLAVOUR}" == "ubuntu-minimal" ] || [ "${FLAVOUR}" == "ubuntu-minimal" ]; then
+    if [ "${FLAVOUR}" == "ubuntu-minimal" ] || [ "${FLAVOUR}" == "ubuntu-standard" ]; then
       NETNAME_OVERRIDE="net.ifnames=0 biosdevname=0"
     else
       NETNAME_OVERRIDE=""
