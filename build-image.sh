@@ -372,7 +372,11 @@ function configure_hardware() {
         CMDLINE_INIT="init=/usr/lib/raspi-config/init_resize.sh"
         # Add the first boot filesystem resize, init_resize.sh is
         # shipped in raspi-config.
-        cp files/resize2fs_once	$R/etc/init.d/
+        if [ "${FLAVOUR}" == "ubuntu-u-boot" ]; then
+            cp u-boot/resize2fs_once	$R/etc/init.d/
+        else
+            cp files/resize2fs_once	$R/etc/init.d/
+        fi
         chroot $R /bin/systemctl enable resize2fs_once        
     else
         CMDLINE_INIT=""
@@ -722,10 +726,11 @@ function stage_04_corrections() {
 
       if [ "${FLAVOUR}" == "ubuntu-u-boot" ]; then
         echo "Configure for u-boot."
+        mkdir $R/boot/u-boot
         cp -v u-boot/u-boot.bin $R/boot/
         cp -v u-boot/boot.scr $R/boot/
-        cp -v u-boot/config.txt $R/boot/
-        cp -v u-boot/cmdline.txt $R/boot/
+        cp -v u-boot/config.txt $R/boot/u-boot/config.txt
+        cp -v u-boot/cmdline.txt $R/boot/u-boot/cmdline.txt
       fi
 
     fi
