@@ -46,20 +46,3 @@ DEVICE_R=${BUILDDIR}/pi
 ARCH=$(uname -m)
 export TZ=UTC
 
-
-if [ "${FLAVOUR}" == "ubuntu-minimal" ] || [ "${FLAVOUR}" == "ubuntu-standard" ] || [ "${FLAVOUR}" == "ubuntu-gnome" ]; then
-    USERNAME="ubuntu"
-    OEM_CONFIG=0
-else
-    USERNAME="${FLAVOUR}"
-    OEM_CONFIG=1
-fi
-
-# Override OEM_CONFIG here if required. Either 0 or 1.
-# - 0 to hardcode a user.
-# - 1 to use oem-config.
-#OEM_CONFIG=1
-
-if [ ${OEM_CONFIG} -eq 1 ]; then
-    USERNAME="oem"
-fi

@@ -24,6 +24,23 @@ if [ $(id -u) -ne 0 ]; then
     exit 1
 fi
 
+if [ "${FLAVOUR}" == "ubuntu-minimal" ] || [ "${FLAVOUR}" == "ubuntu-standard" ]; then
+    USERNAME="ubuntu"
+    OEM_CONFIG=0
+else
+    USERNAME="${FLAVOUR}"
+    OEM_CONFIG=1
+fi
+
+# Override OEM_CONFIG here if required. Either 0 or 1.
+# - 0 to hardcode a user.
+# - 1 to use oem-config.
+#OEM_CONFIG=1
+
+if [ ${OEM_CONFIG} -eq 1 ]; then
+    USERNAME="oem"
+fi
+
 # Mount host system
 function mount_system() {
     # In case this is a re-run move the cofi preload out of the way
@@ -366,7 +383,12 @@ function configure_hardware() {
     cp files/config.txt $R/boot/
 
     # Add /boot/cmdline.txt
-    echo "dwc_otg.lpm_enable=0 console=serial0,115200 console=tty1 root=/dev/mmcblk0p2 rootfstype=${FS} elevator=deadline fsck.repair=yes rootwait quiet splash plymouth.ignore-serial-consoles ${CMDLINE_INIT}" > $R/boot/cmdline.txt
+    if [ "${FLAVOUR}" == "ubuntu-minimal" ] || [ "${FLAVOUR}" == "ubuntu-minimal" ]; then
+      NETNAME_OVERRIDE="net.ifnames=0 biosdevname=0"
+    else
+      NETNAME_OVERRIDE=""
+    fi
+    echo "dwc_otg.lpm_enable=0 console=serial0,115200 console=tty1 root=/dev/mmcblk0p2 rootfstype=${FS} elevator=deadline fsck.repair=yes rootwait quiet splash plymouth.ignore-serial-consoles ${NETNAME_OVERRIDE} ${CMDLINE_INIT}" > $R/boot/cmdline.txt
     # Enable VC4 on composited desktops
     if [ "${FLAVOUR}" == "kubuntu" ] || [ "${FLAVOUR}" == "ubuntu" ] || [ "${FLAVOUR}" == "ubuntu-gnome" ]; then
         echo "dtoverlay=vc4-kms-v3d" >> $R/boot/config.txt
@@ -685,16 +707,18 @@ function stage_04_corrections() {
         chroot $R apt-get -y dist-upgrade
       fi
 
-      # Upgrade Xorg using HWE.
-      chroot $R apt-get install -y --install-recommends \
-      xserver-xorg-core-hwe-16.04 \
-      xserver-xorg-input-all-hwe-16.04 \
-      xserver-xorg-input-evdev-hwe-16.04 \
-      xserver-xorg-input-synaptics-hwe-16.04 \
-      xserver-xorg-input-wacom-hwe-16.04 \
-      xserver-xorg-video-all-hwe-16.04 \
-      xserver-xorg-video-fbdev-hwe-16.04 \
-      xserver-xorg-video-vesa-hwe-16.04
+      if [ "${FLAVOUR}" != "ubuntu-minimal" ] && [ "${FLAVOUR}" != "ubuntu-standard" ]; then
+        # Upgrade Xorg using HWE.
+        chroot $R apt-get install -y --install-recommends \
+        xserver-xorg-core-hwe-16.04 \
+        xserver-xorg-input-all-hwe-16.04 \
+        xserver-xorg-input-evdev-hwe-16.04 \
+        xserver-xorg-input-synaptics-hwe-16.04 \
+        xserver-xorg-input-wacom-hwe-16.04 \
+        xserver-xorg-video-all-hwe-16.04 \
+        xserver-xorg-video-fbdev-hwe-16.04 \
+        xserver-xorg-video-vesa-hwe-16.04
+      fi
     fi
 
     # Insert other corrections here.
