@@ -1,5 +1,10 @@
 # Ubuntu MATE 16.04 for the Raspberry Pi 2 and Raspberry Pi 3.
 
+This is a pure clone of the Raspberry Pi Flavour Maker available from launchpad (Ubuntu) at:
+
+ * <https://git.launchpad.net/ubuntu-pi-flavour-maker>
+ * git clone https://git.launchpad.net/ubuntu-pi-flavour-maker
+
 Martin Wimpress and Rohith Madhavan have made an Ubuntu MATE image
 for the Raspberry Pi 2 and Raspberry PI 3 which you can download or
 build yourself.
