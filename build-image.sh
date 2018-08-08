@@ -372,11 +372,7 @@ function configure_hardware() {
         CMDLINE_INIT="init=/usr/lib/raspi-config/init_resize.sh"
         # Add the first boot filesystem resize, init_resize.sh is
         # shipped in raspi-config.
-        if [ "${FLAVOUR}" == "ubuntu-u-boot" ]; then
-            cp u-boot/resize2fs_once	$R/etc/init.d/
-        else
-            cp files/resize2fs_once	$R/etc/init.d/
-        fi
+        cp files/resize2fs_once	$R/etc/init.d/
         chroot $R /bin/systemctl enable resize2fs_once        
     else
         CMDLINE_INIT=""
@@ -396,6 +392,16 @@ function configure_hardware() {
     # Enable VC4 on composited desktops
     if [ "${FLAVOUR}" == "kubuntu" ] || [ "${FLAVOUR}" == "ubuntu" ] || [ "${FLAVOUR}" == "ubuntu-gnome" ]; then
         echo "dtoverlay=vc4-kms-v3d" >> $R/boot/config.txt
+    fi
+
+    # Boot through u-boot instead of direct to kernel
+    if [ "${FLAVOUR}" == "ubuntu-u-boot" ]; then
+      cp -v u-boot/u-boot.bin $R/boot/u-boot.bin
+      cp -v u-boot/boot.scr $R/boot/boot.scr
+      echo "enable_uart=1" >> $R/boot/config.txt
+      echo "kernel=u-boot.bin" >> $R/boot/config.txt
+      echo "dtparam=i2c_arm=on" >> $R/boot/config.txt
+      echo "dtparam=spi=on" >> $R/boot/config.txt
     fi
 
     # Set up fstab
@@ -722,15 +728,6 @@ function stage_04_corrections() {
         xserver-xorg-video-all-hwe-16.04 \
         xserver-xorg-video-fbdev-hwe-16.04 \
         xserver-xorg-video-vesa-hwe-16.04
-      fi
-
-      if [ "${FLAVOUR}" == "ubuntu-u-boot" ]; then
-        echo "Configure for u-boot."
-        mkdir $R/boot/u-boot
-        cp -v u-boot/u-boot.bin $R/boot/
-        cp -v u-boot/boot.scr $R/boot/
-        cp -v u-boot/config.txt $R/boot/u-boot/config.txt
-        cp -v u-boot/cmdline.txt $R/boot/u-boot/cmdline.txt
       fi
 
     fi
