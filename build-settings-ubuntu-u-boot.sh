@@ -29,7 +29,7 @@ QUALITY="beta"
 FS_TYPE="ext4"
 
 # Target image size, will be represented in GB
-FS_SIZE=1
+FS_SIZE=2
 
 # Either 0 or 1.
 # - 0 don't make generic rootfs tarball
@@ -44,5 +44,9 @@ BASE_R=${BASEDIR}/base
 DESKTOP_R=${BUILDDIR}/desktop
 DEVICE_R=${BUILDDIR}/pi
 ARCH=$(uname -m)
+
+KERNEL_TREE=/home/douglas/github/raspberrypi/merged
+XCROSS_COMPILE=/home/douglas/linaro/gcc-linaro-6.4.1-2018.05-x86_64_arm-linux-gnueabihf/bin/arm-linux-gnueabihf-
+
 export TZ=UTC
 
