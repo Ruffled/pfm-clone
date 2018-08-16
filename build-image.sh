@@ -755,17 +755,17 @@ function stage_06_build_kernel() {
     R=${DEVICE_R}
     mount_system
 
-    if [ "${RELEASE}" == "xenial" ]; then
-      if [ "${FLAVOUR}" == "ubuntu-u-boot" ] && [ -d "${KERNEL_TREE}" ] && [ -x "${XCROSS_COMPILE}-gcc" ]; then
+    if [ "X${KERNEL_TREE}" != "X" ] && [ "X${XCROSS_COMPILE}" != "X" ]; then
+      if [ -d "${KERNEL_TREE}" ] && [ -x "${XCROSS_COMPILE}gcc" ]; then
 	HERE=`pwd`
         cd ${KERNEL_TREE}
 	make ARCH=arm CROSS_COMPILE=${XCROSS_COMPILE} bcm2709_defconfig
 	make -j8 ARCH=arm CROSS_COMPILE=${XCROSS_COMPILE} zImage modules dtbs
 	make ARCH=arm CROSS_COMPILE=${XCROSS_COMPILE} INSTALL_MOD_PATH=$R modules_install
-        sudo cp arch/arm/boot/zImage $R/boot/$KERNEL.img
-        sudo cp arch/arm/boot/dts/*.dtb $R/boot
-        sudo cp arch/arm/boot/dts/overlays/*.dtb* $R/boot/overlays/
-        sudo cp arch/arm/boot/dts/overlays/README $R/boot/overlays/
+        cp arch/arm/boot/zImage $R/boot/$KERNEL.img
+        cp arch/arm/boot/dts/*.dtb $R/boot
+        cp arch/arm/boot/dts/overlays/*.dtb* $R/boot/overlays/
+        cp arch/arm/boot/dts/overlays/README $R/boot/overlays/
 	cd ${HERE}
       fi
     fi
