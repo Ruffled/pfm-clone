@@ -751,23 +751,73 @@ function stage_05_rpi_update() {
     umount_system
 }
 
+function check_xcompile() {
+    HERE=`pwd`
+    GCC_CROSS_PATH=""
+    if [ "X${CROSS_INSTALL}" != "X" ] && [ "X${CROSS_ARCH}" != "X" ] && [ "X${CROSS_RELEASE}" != "X" ] && [ "X${CROSS_SOURCE}" != "X" ]; then
+      # CROSS INSTALL is always rooted at /opt
+      CROSS_INSTALL="/opt/${CROSS_INSTALL}"
+      CROSS_PATH="${CROSS_INSTALL}/${CROSS_RELEASE}"
+      if [ -d ${CROSS_PATH} ]; then
+        GCC_CROSS_PATH=`find ${CROSS_PATH} -name ${CROSS_ARCH}-gcc`
+      else
+        mkdir -p "${CROSS_PATH}"
+      fi
+      if [ "X${GCC_CROSS_PATH}" == "X" ]; then
+        cd ${CROSS_INSTALL}
+        wget ${CROSS_SOURCE}
+        if [ -f `basename ${CROSS_SOURCE}` ]; then
+          tar xf `basename ${CROSS_SOURCE}`
+        fi
+      fi
+      GCC_CROSS_PATH=`find ${CROSS_PATH} -name ${CROSS_ARCH}-gcc`
+    fi
+    if [ "X${GCC_CROSS_PATH}" != "X" ] && [ -x ${GCC_CROSS_PATH} ]; then
+      GCC_CROSS_PATH=`echo ${GCC_CROSS_PATH} | sed -e 's/gcc$//'`
+    else
+      GCC_CROSS_PATH=""
+    fi
+    cd ${HERE}
+}
+
+function check_kernel_tree() {
+    HERE=`pwd`
+    if [ "X${KERNEL_TREE}" != "X" ] && [ "X${KERNEL_TREE}" != "X." ]; then
+      KERNEL_TREE=${HOME}/${KERNEL_TREE}
+      KD=`dirname ${KERNEL_TREE}`
+      KB=`basename ${KERNEL_TREE}`
+      if [ ! -d ${KD} ]; then
+        mkdir -p ${KD}
+      fi
+      cd ${KD}
+      if [ ! -d ${KB} ]; then
+        git clone --depth=1 https://github.com/raspberrypi/linux ${KB}
+      fi
+    fi
+
+    if [ ! -d ${KERNEL_TREE}/kernel ] || [ ! -d ${KERNEL_TREE}/arch ]; then
+      KERNEL_TREE=""
+    fi
+    cd ${HERE}
+}
+
 function stage_06_build_kernel() {
     R=${DEVICE_R}
     mount_system
 
-    if [ "X${KERNEL_TREE}" != "X" ] && [ "X${XCROSS_COMPILE}" != "X" ]; then
-      if [ -d "${KERNEL_TREE}" ] && [ -x "${XCROSS_COMPILE}gcc" ]; then
-	HERE=`pwd`
-        cd ${KERNEL_TREE}
-	make ARCH=arm CROSS_COMPILE=${XCROSS_COMPILE} bcm2709_defconfig
-	make -j8 ARCH=arm CROSS_COMPILE=${XCROSS_COMPILE} zImage modules dtbs
-	make ARCH=arm CROSS_COMPILE=${XCROSS_COMPILE} INSTALL_MOD_PATH=$R modules_install
-        cp arch/arm/boot/zImage $R/boot/$KERNEL.img
-        cp arch/arm/boot/dts/*.dtb $R/boot
-        cp arch/arm/boot/dts/overlays/*.dtb* $R/boot/overlays/
-        cp arch/arm/boot/dts/overlays/README $R/boot/overlays/
-	cd ${HERE}
-      fi
+    check_xcompile
+    check_kernel_tree
+    if [ "X${KERNEL_TREE}" != "X" ] && [ "X${GCC_CROSS_PATH}" != "X" ]; then
+      HERE=`pwd`
+      cd ${KERNEL_TREE}
+      make ARCH=arm CROSS_COMPILE=${GCC_CROSS_PATH} bcm2709_defconfig
+      make -j8 ARCH=arm CROSS_COMPILE=${GCC_CROSS_PATH} zImage modules dtbs
+      make ARCH=arm CROSS_COMPILE=${GCC_CROSS_PATH} INSTALL_MOD_PATH=$R modules_install
+      cp arch/arm/boot/zImage $R/boot/$KERNEL.img
+      cp arch/arm/boot/dts/*.dtb $R/boot
+      cp arch/arm/boot/dts/overlays/*.dtb* $R/boot/overlays/
+      cp arch/arm/boot/dts/overlays/README $R/boot/overlays/
+      cd ${HERE}
     fi
 
     umount_system

@@ -45,8 +45,17 @@ DESKTOP_R=${BUILDDIR}/desktop
 DEVICE_R=${BUILDDIR}/pi
 ARCH=$(uname -m)
 
-KERNEL_TREE=/home/douglas/github/raspberrypi/merged
-XCROSS_COMPILE=/home/douglas/linaro/gcc-linaro-6.4.1-2018.05-x86_64_arm-linux-gnueabihf/bin/arm-linux-gnueabihf-
+# CROSS COMPILER will be installed in /opt
+# Path to tree will be /opt/$CROSS_INSTALL/$CROSS_BASE
+# DO NOT specify /opt here, it will be forced later.
+CROSS_INSTALL=linaro
+CROSS_ARCH=arm-linux-gnueabihf
+CROSS_RELEASE=gcc-linaro-6.4.1-2018.05-x86_64_${CROSS_ARCH}
+CROSS_SOURCE=https://releases.linaro.org/components/toolchain/binaries/6.4-2018.05/${CROSS_ARCH}/${CROSS_RELEASE}.tar.xz
+
+# KERNEL tree will be relative to your HOME.
+# DO not specify it in the path here, it will be enforced later
+KERNEL_TREE=github/raspberrypi/linux
 
 export TZ=UTC
 
