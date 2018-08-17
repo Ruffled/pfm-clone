@@ -394,16 +394,6 @@ function configure_hardware() {
         echo "dtoverlay=vc4-kms-v3d" >> $R/boot/config.txt
     fi
 
-    # Boot through u-boot instead of direct to kernel
-    if [ "${FLAVOUR}" == "ubuntu-u-boot" ]; then
-      cp -v u-boot/u-boot.bin $R/boot/u-boot.bin
-      cp -v u-boot/boot.scr $R/boot/boot.scr
-      echo "enable_uart=1" >> $R/boot/config.txt
-      echo "kernel=u-boot.bin" >> $R/boot/config.txt
-      echo "dtparam=i2c_arm=on" >> $R/boot/config.txt
-      echo "dtparam=spi=on" >> $R/boot/config.txt
-    fi
-
     # Set up fstab
     cat <<EOM >$R/etc/fstab
 proc            /proc           proc    defaults          0       0
@@ -801,6 +791,27 @@ function check_kernel_tree() {
     cd ${HERE}
 }
 
+function check_u_boot_tree() {
+    HERE=`pwd`
+    if [ "X${U_BOOT_TREE}" != "X" ] && [ "X${U_BOOT_TREE}" != "X." ]; then
+      U_BOOT_TREE=${HOME}/${U_BOOT_TREE}
+      UD=`dirname ${U_BOOT_TREE}`
+      UB=`basename ${U_BOOT_TREE}`
+      if [ ! -d ${UD} ]; then
+        mkdir -p ${UD}
+      fi
+      cd ${UD}
+      if [ ! -d ${UB} ]; then
+	git clone git://git.denx.de/u-boot.git ${UB}
+      fi
+    fi
+
+    if [ ! -d ${U_BOOT_TREE}/arch ] || [ ! -d ${U_BOOT_TREE}/configs ]; then
+      U_BOOT_TREE=""
+    fi
+    cd ${HERE}
+}
+
 function stage_06_build_kernel() {
     R=${DEVICE_R}
     mount_system
@@ -823,6 +834,30 @@ function stage_06_build_kernel() {
     umount_system
 }
 
+# Boot through u-boot instead of direct to kernel
+function stage_07_build_u_boot() {
+    R=${DEVICE_R}
+    mount_system
+
+    check_xcompile
+    check_u_boot_tree
+    if [ "X${U_BOOT_TREE}" != "X" ] && [ "X${GCC_CROSS_PATH}" != "X" ]; then
+      HERE=`pwd`
+      cd ${U_BOOT_TREE}
+      make rpi_3_32b_defconfig
+      make -j8 ARCH=arm CROSS_COMPILE=${GCC_CROSS_PATH} USE_PRIVATE_LIBGCC=yes
+      cp -v u-boot.bin $R/boot/u-boot.bin
+      cd ${HERE}
+      cp -v u-boot/boot.scr $R/boot/boot.scr
+      echo "enable_uart=1" >> $R/boot/config.txt
+      echo "kernel=u-boot.bin" >> $R/boot/config.txt
+      echo "dtparam=i2c_arm=on" >> $R/boot/config.txt
+      echo "dtparam=spi=on" >> $R/boot/config.txt
+    fi
+
+    umount_system
+}
+
 function stage_last_mkimage() {
     make_raspi2_image ${FS_TYPE} ${FS_SIZE}
 }
@@ -833,5 +868,6 @@ stage_03_raspi2
 stage_04_corrections
 stage_05_rpi_update
 stage_06_build_kernel
+stage_07_build_u_boot
 stage_last_mkimage
 #compress_image

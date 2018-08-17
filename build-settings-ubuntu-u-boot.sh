@@ -57,5 +57,9 @@ CROSS_SOURCE=https://releases.linaro.org/components/toolchain/binaries/6.4-2018.
 # DO not specify it in the path here, it will be enforced later
 KERNEL_TREE=github/raspberrypi/linux
 
+# U-BOOT tree will be relative to your HOME.
+# DO not specify it in the path here, it will be enforced later
+U_BOOT_TREE=github/raspberrypi/u-boot
+
 export TZ=UTC
 
